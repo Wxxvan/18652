@@ -1,0 +1,31 @@
+<html>
+<head>
+<title>welcome !</title>
+</head>
+<body>
+
+<form method="post" action="/login">
+                <h3><%= error%></h3>
+		<table>
+			<tr>
+				<td> Nickname: </td>
+				<td><input type="text" name="name" value=""/></td>
+			</tr>
+			<tr>
+				<td> Password: </td>
+				<td><input type="password" name="password" value=""/></td>
+			</tr>
+			<tr>
+				<td colspan="2" align="center">
+					<input type="submit" name="button" value="Login"/>
+				</td>
+			</tr>
+                        <tr>
+				 <td colspan="2" align="center">
+				    <a href="/regi">Want to be a member?Register Now!</a>
+				</td>
+			</tr>
+		</table>
+	</form>
+</body>
+</html>

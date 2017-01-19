@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= name%></title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        table {
+            width: 100%;
+        }
+
+        table.tool {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px;
+        }
+
+        #content {
+            height: auto;
+            padding: 10px;
+            padding-bottom: 32px;
+        }
+
+        #content tr {
+            margin-bottom: 10px;
+        }
+        #textContent {
+            border: 1px solid grey;
+            border-radius: 5px;
+            padding: 30px;
+        }
+
+        .left {
+            width: 88%;
+        }
+
+        #send {
+            width: auto;
+            padding: 2px 12px;
+            line-height: 26px !important;
+            border-radius: 5px;
+            font-weight: bold;
+            color: white;
+            background-color: black;
+        }
+        #logout {
+            width: auto;
+            padding: 2px 12px;
+            line-height: 26px !important;
+            border-radius: 5px;
+            font-weight: bold;
+            color: white;
+            background-color: black;
+        }
+
+
+        tr.align-left td > span {
+            float: left;
+        }
+
+        tr.align-left td > span span {
+            display: inline-block;
+        }
+
+        tr.align-right td > span {
+            float: right;
+        }
+
+        tr.align-right td > span span {
+            display: inline-block;
+        }
+
+        span.msg {
+            padding: 6px;
+            background-color: #00B7FF;
+            border: 1px solid #00B7ee;
+            border-radius: 5px;
+        }
+
+        .timer {
+            display: block;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <table id="content">
+    </table>
+</div>
+
+<table class="tool">
+    <tr>
+        <td class="left">
+            <div id="textContent" contenteditable="true" type="text"></div>
+        </td>
+        <td>
+            <button id="send">send</button>
+        </td>
+         <td>
+	    <form method="get" action="/logout">
+		<input id="logout" type="submit" name="button" value="logout"/>
+	    </form>
+        </td>
+    </tr>
+</table>
+<script>
+    var socket = io.connect('http://127.0.0.1:3000');
+    var userName = document.getElementsByTagName('title')[0].innerHTML;
+    socket.on('connect', function () {
+        socket.emit('join', userName);
+    });
+    socket.on('chat', function (user, data) {
+        var p = document.createElement('tr');
+        var ti = document.createElement('tr');
+        var direct = 'align-left';
+        var myDate = new Date();
+        var time = myDate.toLocaleString();
+        if (user === userName) {
+            direct = 'align-right';
+            p.innerHTML = '<td><span><span>' + user + ' : </span> <span>' + data + '</span></td><span></span>';
+            ti.innerHTML = '<td><span><span>' + time + '</span><span></span></td><span></span>';
+        } else {
+            p.innerHTML = '<td><span><span>' + user + ' : </span> <span>' + data + '</span><span></span></td>';;
+            ti.innerHTML = '<td><span><span>' + time + '</span><span></span><span></span></td>';
+        }
+        p.className = direct;
+        ti.className = direct;
+        $('#content').appendChild(p);
+        $('#content').appendChild(ti);
+    });
+
+    socket.on('state', function (user, result) {
+        for(i =0; i<result.length; i++) {
+		var msg = result[i];
+		var m = document.createElement('tr');
+                var ti = document.createElement('tr');
+                var side = 'align-left';
+                var message = msg.message;
+                var usr = msg.nickname;
+		var timeOld = msg.timestamp;
+                if (usr === userName) {
+            	side = 'align-right';
+            	m.innerHTML = '<td><span><span>' + usr  + ' : </span> <span>' + message + '</span></td><span></span>';
+            	ti.innerHTML = '<td><span><span>' + timeOld + '</span><span></span></td><span></span>';
+        	} else {
+            	m.innerHTML = '<td><span><span>' + usr + ' : </span> <span>' + message + '</span><span></span></td>';;
+            	ti.innerHTML = '<td><span><span>' + timeOld + '</span><span></span><span></span></td>';
+        	}
+                 m.className = side;
+                 ti.className = side;
+		$('#content').appendChild(m);
+                $('#content').appendChild(ti);
+	}
+ 	var p = document.createElement('tr');
+        var direct = 'align-center';
+        var myDate = new Date();
+        var time = myDate.toLocaleString();
+        p.innerHTML = '<td>System : ' + user + ' is online now! '+ time +'</td>';
+        p.className = direct;
+        p.style.color = 'blue';
+        $('#content').appendChild(p);
+    });
+    socket.on('online', function(user){
+         var p = document.createElement('tr');
+        var direct = 'align-center';
+        var myDate = new Date();
+        var time = myDate.toLocaleString();
+        p.innerHTML = '<td>System : ' + user + ' is online now! '+ time +'</td>';
+        p.className = direct;
+        p.style.color = 'blue';
+        $('#content').appendChild(p);
+
+    })
+
+    socket.on('out', function(user){
+	var p = document.createElement('tr');
+        var direct = 'align-center';
+        var myDate = new Date();
+        var time = myDate.toLocaleString();
+        p.innerHTML = '<td>System : ' + user + ' is off line now! '+ time +'</td>';
+        p.className = direct;
+        p.style.color = 'red';
+        $('#content').appendChild(p);
+
+    })
+
+    $('#send').addEventListener('click', function (target) {
+        var content = $('#textContent').innerHTML;
+        if (content = content.replace(" ", " ")) {
+            socket.emit('sendMSG', content);
+            $('#textContent').innerHTML = "";
+        }
+    });
+    
+    $('#logout').addEventListener('click', function (target) {
+            socket.emit('logout', userName);
+    });
+
+
+    function $(flag) {
+        return document.querySelector(flag);
+    }
+</script>
+
+</body>
+</html>
