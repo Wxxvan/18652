@@ -21,12 +21,16 @@ app.get('/', function(req, res){
 app.post('/login', urlencodedParser, function(req, res){
     var errormsg = 'password and nickname is required!';
     var errormsg2 = 'password is not correct!';
+    var errormsg3 = 'no such user!'
     if (!req.body.name || !req.body.password) return res.render('login', {error:errormsg});  
     var nickname = req.body.name;
     var client = db.connect();
     var result = null;
     db.selectuser(client, nickname, function(result){
-    if(result[0].password===req.body.password){
+    if (result == "") {
+	res.render('login', {error:errormsg3});
+        return;
+    } else if( result[0].password===req.body.password){
 	res.render('index', {name:nickname});
     } else {
 	res.render('login', {error:errormsg2});
@@ -36,20 +40,26 @@ app.post('/login', urlencodedParser, function(req, res){
 
 app.post('/regi', urlencodedParser, function(req, res){
     var client = db.connect();
+    var check = "yes";
     if (!req.body.name || !req.body.password || !req.body.nickname) return res.render('register', {error:'all fields are required!'});
 
     db.checkname(client, req.body.nickname, function(result){
-    if(result != null){
+    if(result != ''){
     var errormsg = 'nickname already exits!';
     res.render('register', {error:errormsg});
     return;
-    }
-    });
-
+    } else {
     db.createuser(client, req.body.name, req.body.nickname, req.body.password, function(err){
     if(err) throw err;
     res.render('login', {error:'Welcome!'});
+    });}
     });
+/*    
+    db.createuser(client, req.body.name, req.body.nickname, req.body.password, function(err){
+    if(err) throw err;
+    res.render('login', {error:'Welcome!'});
+    }); */
+    
 });
 
 app.get('/logout', function(req, res){
